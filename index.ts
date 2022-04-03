@@ -23,6 +23,10 @@ import { keepRoomAlive } from "./utils/keepAlive";
 
 import deleteSocket from "./utils/deleteSocket";
 
+import "./database/sqlite";
+
+import deleteOldFiles from "./tasks/deleteOldFiles";
+
 app.use(compression());
 app.use(minify());
 
@@ -148,6 +152,9 @@ const upload = multer({ storage });
 app.post("/upload", upload.single("efile"), UploadEndpoint);
 
 app.use("/efile", express.static("public"));
+
+// call deleteOldFiles every 1m
+setInterval(deleteOldFiles, 60 * 1000);
 
 server.listen(process.env.PORT, process.env.HOST, () => {
     console.log(`listening on ${process.env.HOST}:${process.env.PORT}`);

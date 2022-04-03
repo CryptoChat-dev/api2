@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import type { Request, Response } from "express";
 
+import db from "../../database/sqlite";
+
 const asyncFs = require("fs/promises");
 
 const path = require("path");
@@ -32,6 +34,9 @@ const handler = async (req: Request, res: Response) => {
 
     // store file in public folder
     await asyncFs.writeFile(path.resolve("./public/" + fileUuid), file.buffer);
+
+    // add file to database
+    await db.run(`insert into files (id, uploaded_at) values (?, ?)`, [fileUuid, Date.now()]);
 
     res.json({
         uuid: fileUuid,
