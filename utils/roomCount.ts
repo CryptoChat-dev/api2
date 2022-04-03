@@ -10,7 +10,7 @@ export const incrementRoomCount = async (roomId: string) => {
         return;
     }
     // increment room value
-    await Client.incr(roomId);
+    await Client.set(roomId, (parseInt(room) + 1).toString());
 };
 
 export const decrementRoomCount = async (roomId: string) => {
@@ -21,7 +21,7 @@ export const decrementRoomCount = async (roomId: string) => {
         return;
     }
     // decrement room value
-    await Client.decr(roomId);
+    await Client.set(roomId, (parseInt(room) - 1).toString());
 };
 
 export const getRoomCount = async (roomId: string) => {
