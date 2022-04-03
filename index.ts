@@ -42,6 +42,8 @@ if (process.env.USE_CORS === "true") {
         methods: ["GET", "POST"],
         credentials: true,
     };
+
+    app.use(require("cors")());
 }
 
 const io = require("socket.io")(server, socketioOptions);

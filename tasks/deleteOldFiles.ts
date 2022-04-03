@@ -6,16 +6,16 @@ const path = require("path");
 
 const deleteOldFiles = async () => {
     // get all files where uploaded_at is older than 24h
-    const files = await db.all(`select id from files where uploaded_at < ?`, [
-        Date.now() - 60 * 60 * 24,
-    ]);
-
-    // delete files
-    for await (const file of files) {
-        await db.run(`delete from files where id = ?`, [file.id]);
-        // delete from fs
-        await asyncFs.unlink(path.resolve("./public/" + file.id));
-    }
+    db.each(
+        `select id from files where uploaded_at < ?`,
+        [Date.now() - 60 * 60 * 24],
+        async (err, row) => {
+            if (err) return;
+            await db.run(`delete from files where id = ?`, [row.id]);
+            // delete from fs
+            await asyncFs.unlink(path.resolve("./public/" + row.id));
+        }
+    );
 };
 
 export default deleteOldFiles;
