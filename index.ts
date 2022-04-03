@@ -46,37 +46,47 @@ interface encryptionData {
 }
 
 io.on("connection", (socket: Socket) => {
-    socket.on("join", async (data: { roomName: string; username: string }) => {
-        // Listens for join events from clients
-        if (typeof data === "object") {
-            // Make sure the data received is a JS object
-            var now = new Date();
-            if (!data.roomName || !data.username) {
+    socket.on(
+        "join",
+        async (data: {
+            roomName: string;
+            username: { iv: string; data: string };
+        }) => {
+            // Listens for join events from clients
+            if (typeof data === "object") {
                 // Make sure the data received is a JS object
-                console.log(`${now} - Event had invalid fields.`);
+                var now = new Date();
+                if (!data.roomName || !data.username) {
+                    // Make sure the data received is a JS object
+                    console.log(`${now} - Event had invalid fields.`);
+                    return;
+                }
+                // Join the socket to the requested room
+                socket.join(data.roomName);
+                io.to(data.roomName).emit("join response", {
+                    // Broadcasts the username as a join response to the Socket room
+                    username: data.username,
+                    id: socket.id,
+                });
+
+                if (!(await doesRoomExist(data.roomName))) {
+                    // If the room doesn't exist, create it
+                    await createRoom(data.roomName);
+                } else {
+                    await incrementRoomCount(data.roomName);
+                }
+
+                await storeSocketId(
+                    socket.id,
+                    data.roomName,
+                    JSON.stringify(data.username)
+                );
+
                 return;
             }
-            // Join the socket to the requested room
-            socket.join(data.roomName);
-            io.to(data.roomName).emit("join response", {
-                // Broadcasts the username as a join response to the Socket room
-                username: data.username,
-                id: socket.id,
-            });
-
-            if (!(await doesRoomExist(data.roomName))) {
-                // If the room doesn't exist, create it
-                await createRoom(data.roomName);
-            } else {
-                await incrementRoomCount(data.roomName);
-            }
-
-            await storeSocketId(socket.id, data.roomName);
-
-            return;
+            console.log(`${now} - Event was rejected: ${data}`);
         }
-        console.log(`${now} - Event was rejected: ${data}`);
-    });
+    );
 
     socket.on(
         "chat event",
@@ -109,14 +119,18 @@ io.on("connection", (socket: Socket) => {
         if (!socketRoom) {
             return;
         }
-        
+
         await Client.del(socket.id);
 
         await decrementRoomCount(socketRoom);
 
+        const clientUsername: string = (await Client.get(
+            `${socket.id}_username`
+        )) as string;
+
         io.to(socketRoom).emit("leave response", {
             id: socket.id,
-            // todo, store the encrypted username of socket ids in redis so we can broadcast it to all sockets
+            username: clientUsername,
         });
     });
 });
