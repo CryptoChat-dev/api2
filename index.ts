@@ -141,6 +141,34 @@ io.on("connection", (socket: Socket) => {
             username: clientUsername,
         });
     });
+
+    socket.on(
+        "file event",
+        async (data: {
+            roomName: string;
+            username: { iv: string; data: string };
+            id: string;
+            iv: string;
+            name: { iv: string; data: string };
+        }) => {
+            if (!data.roomName || !data.username || !data.id) {
+                return;
+            }
+
+            if (!(await doesRoomExist(data.roomName))) {
+                return;
+            }
+
+            await keepRoomAlive(data.roomName);
+
+            io.to(data.roomName).emit("file response", {
+                username: data.username,
+                id: data.id,
+                iv: data.iv,
+                name: data.name,
+            });
+        }
+    );
 });
 
 import UploadEndpoint from "./routes/files/upload";
