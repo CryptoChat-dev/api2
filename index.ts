@@ -21,6 +21,8 @@ import storeSocketId from "./utils/storeSocket";
 
 import { keepRoomAlive } from "./utils/keepAlive";
 
+import deleteSocket from "./utils/deleteSocket";
+
 app.use(compression());
 app.use(minify());
 
@@ -120,8 +122,8 @@ io.on("connection", (socket: Socket) => {
             return;
         }
 
-        await Client.del(socket.id);
-
+        await deleteSocket(socket.id);
+        
         await decrementRoomCount(socketRoom);
 
         const clientUsername: string = (await Client.get(
