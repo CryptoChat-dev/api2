@@ -61,6 +61,7 @@ io.on("connection", (socket: Socket) => {
             io.to(data.roomName).emit("join response", {
                 // Broadcasts the username as a join response to the Socket room
                 username: data.username,
+                id: socket.id,
             });
 
             if (!(await doesRoomExist(data.roomName))) {
