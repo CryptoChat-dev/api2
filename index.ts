@@ -1,4 +1,4 @@
-import { incrementRoomCount } from "./utils/roomCount";
+import { decrementRoomCount, incrementRoomCount } from "./utils/roomCount";
 import type { Socket } from "socket.io";
 
 import { config } from "dotenv";
@@ -11,7 +11,7 @@ const server = require("http").Server(app);
 import compression = require("compression");
 import minify = require("express-minify");
 
-import "./database/redis";
+import Client from "./database/redis";
 
 import doesRoomExist from "./utils/roomExists";
 
@@ -19,7 +19,7 @@ import createRoom from "./utils/createRoom";
 
 import storeSocketId from "./utils/storeSocket";
 
-import { keepSocketAlive, keepRoomAlive } from "./utils/keepAlive";
+import { keepRoomAlive } from "./utils/keepAlive";
 
 app.use(compression());
 app.use(minify());
@@ -77,37 +77,47 @@ io.on("connection", (socket: Socket) => {
         console.log(`${now} - Event was rejected: ${data}`);
     });
 
-    socket.on("keepalive", async (data: { roomName: string }) => {
-        if (typeof data === "object") {
-            if (!data.roomName) {
+    socket.on(
+        "chat event",
+        async (data: {
+            roomName: string;
+            username: encryptionData;
+            message: encryptionData;
+        }) => {
+            if (typeof data !== "object") {
                 return;
             }
 
-            await keepSocketAlive(socket.id);
+            if (!data.roomName || !data.username || !data.message) {
+                return;
+            }
+
+            await keepRoomAlive(data.roomName);
+
+            io.to(data.roomName).emit("chat response", {
+                username: data.username,
+                message: data.message,
+            });
         }
-    });
+    );
 
-    socket.on("chat event", async (data: {
-        roomName: string;
-        username: encryptionData,
-        message: encryptionData,
-
-    }) => {
-        if (typeof data !== "object") {
+    socket.on("disconnect", async () => {
+        // on disconnect, check if the socket is in a room
+        // if so, decrement the room count and broadcast leave
+        const socketRoom: string = (await Client.get(socket.id)) as string;
+        if (!socketRoom) {
             return;
         }
+        
+        await Client.del(socket.id);
 
-        if (!data.roomName || !data.username || !data.message) {
-            return;
-        }
+        await decrementRoomCount(socketRoom);
 
-        await keepRoomAlive(data.roomName);
-
-        io.to(data.roomName).emit("chat response", {
-            username: data.username,
-            message: data.message,
+        io.to(socketRoom).emit("leave response", {
+            id: socket.id,
+            // todo, store the encrypted username of socket ids in redis so we can broadcast it to all sockets
         });
-    })
+    });
 });
 
 server.listen(process.env.PORT, process.env.HOST, () => {
