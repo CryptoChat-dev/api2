@@ -123,7 +123,7 @@ io.on("connection", (socket: Socket) => {
         }
 
         await deleteSocket(socket.id);
-        
+
         await decrementRoomCount(socketRoom);
 
         const clientUsername: string = (await Client.get(
@@ -136,6 +136,18 @@ io.on("connection", (socket: Socket) => {
         });
     });
 });
+
+import UploadEndpoint from "./routes/files/upload";
+
+const multer = require("multer");
+
+const storage = multer.memoryStorage();
+
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("efile"), UploadEndpoint);
+
+app.use("/efile", express.static("public"));
 
 server.listen(process.env.PORT, process.env.HOST, () => {
     console.log(`listening on ${process.env.HOST}:${process.env.PORT}`);
