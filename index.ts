@@ -150,8 +150,9 @@ io.on("connection", (socket: Socket) => {
             id: string;
             iv: string;
             name: { iv: string; data: string };
+            type: { iv: string; data: string; };
         }) => {
-            if (!data.roomName || !data.username || !data.id) {
+            if (!data.roomName || !data.username || !data.id || !data.iv || !data.name || !data.type) {
                 return;
             }
 
@@ -166,6 +167,7 @@ io.on("connection", (socket: Socket) => {
                 id: data.id,
                 iv: data.iv,
                 name: data.name,
+                type: data.type,
             });
         }
     );
