@@ -102,6 +102,7 @@ io.on("connection", (socket: Socket) => {
             roomName: string;
             username: encryptionData;
             message: encryptionData;
+            key: string;
         }) => {
             if (typeof data !== "object") {
                 return;
@@ -116,6 +117,7 @@ io.on("connection", (socket: Socket) => {
             io.to(data.roomName).emit("chat response", {
                 username: data.username,
                 message: data.message,
+                key: data.key,
             });
         }
     );
