@@ -153,8 +153,9 @@ io.on("connection", (socket: Socket) => {
             iv: string;
             name: { iv: string; data: string };
             type: { iv: string; data: string; };
+            key: { iv: string; data: string; };
         }) => {
-            if (!data.roomName || !data.username || !data.id || !data.iv || !data.name || !data.type) {
+            if (!data.roomName || !data.username || !data.id || !data.iv || !data.name || !data.type || !data.key) {
                 return;
             }
 
@@ -170,6 +171,7 @@ io.on("connection", (socket: Socket) => {
                 iv: data.iv,
                 name: data.name,
                 type: data.type,
+                key: data.key,
             });
         }
     );
