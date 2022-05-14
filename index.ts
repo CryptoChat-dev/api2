@@ -131,10 +131,6 @@ io.on("connection", (socket: Socket) => {
             return;
         }
 
-        await deleteSocket(socket.id);
-
-        await decrementRoomCount(socketRoom);
-
         const clientUsername: string = (await Client.get(
             `${socket.id}_username`
         )) as string;
@@ -143,6 +139,10 @@ io.on("connection", (socket: Socket) => {
             id: socket.id,
             username: clientUsername,
         });
+
+        await deleteSocket(socket.id);
+
+        await decrementRoomCount(socketRoom);
     });
 
     socket.on(
