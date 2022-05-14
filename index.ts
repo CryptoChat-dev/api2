@@ -27,6 +27,8 @@ import "./database/sqlite";
 
 import deleteOldFiles from "./tasks/deleteOldFiles";
 
+import cors from "cors";
+
 app.use(compression());
 app.use(minify());
 
@@ -195,7 +197,7 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
-app.post("/upload", upload.single("efile"), UploadEndpoint);
+app.post("/upload", cors(), upload.single("efile"), UploadEndpoint);
 
 app.use("/efile", express.static("public"));
 
