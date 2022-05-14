@@ -181,6 +181,7 @@ io.on("connection", (socket: Socket) => {
                 name: data.name,
                 type: data.type,
                 key: data.key,
+                uid: socket.id,
             });
         }
     );
