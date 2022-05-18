@@ -8,7 +8,7 @@ const deleteOldFiles = async () => {
     // get all files where uploaded_at is older than 24h
     db.each(
         `select id from files where uploaded_at < ?`,
-        [Date.now() - 60 * 60 * 24],
+        [Date.now() - 86400000],
         async (err, row) => {
             if (err) return;
             await db.run(`delete from files where id = ?`, [row.id]);
